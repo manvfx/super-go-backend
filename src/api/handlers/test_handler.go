@@ -12,8 +12,9 @@ type header struct {
 }
 
 type PersonData struct {
-	Firstname string
-	Lastname  string
+	Firstname    string `json:"first_name" binding:"required,alpha,min=4,max=10"`
+	Lastname     string `json:"last_name" binding:"required,alpha,min=4,max=10"`
+	MobileNumber string `json:"mobile_number" binding:"required,mobile,min=11,max=11"`
 }
 
 type TestHandler struct {
@@ -118,8 +119,13 @@ func (h *TestHandler) UriBinder(c *gin.Context) {
 
 func (h *TestHandler) BodyBinder(c *gin.Context) {
 	p := PersonData{}
-	c.ShouldBindJSON(&p)
-
+	err := c.ShouldBindJSON(&p)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"validationError": err.Error(),
+		})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"result": "BodyBinder",
 		"person": p,

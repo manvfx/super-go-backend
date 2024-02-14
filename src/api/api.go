@@ -4,13 +4,23 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/manvfx/super-go-backend/api/routers"
+	validation "github.com/manvfx/super-go-backend/api/validations"
 	"github.com/manvfx/super-go-backend/config"
 )
 
 func InitServer() {
 	cfg := config.GetConfig()
 	r := gin.New()
+
+	// RegisterValidators()
+	val, ok := binding.Validator.Engine().(*validator.Validate)
+	if ok {
+		val.RegisterValidation("mobile", validation.IranianMobileNumberValidator, true)
+	}
+
 	r.Use(gin.Logger(), gin.Recovery())
 
 	api := r.Group("/api")
@@ -26,3 +36,17 @@ func InitServer() {
 
 	r.Run(fmt.Sprintf(":%s", cfg.Server.ExternalPort))
 }
+
+// func RegisterValidators() {
+// 	val, ok := binding.Validator.Engine().(*validator.Validate)
+// 	if ok {
+// 		err := val.RegisterValidation("mobile", validation.IranianMobileNumberValidator, true)
+// 		if err != nil {
+// 			logger.Error(logging.Validation, logging.Startup, err.Error(), nil)
+// 		}
+// 		err = val.RegisterValidation("password", validation.PasswordValidator, true)
+// 		if err != nil {
+// 			logger.Error(logging.Validation, logging.Startup, err.Error(), nil)
+// 		}
+// 	}
+// }
