@@ -6,10 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/manvfx/super-go-backend/api/middlewares"
 	"github.com/manvfx/super-go-backend/api/routers"
 	validation "github.com/manvfx/super-go-backend/api/validations"
 	"github.com/manvfx/super-go-backend/config"
+	"github.com/manvfx/super-go-backend/pkg/logging"
 )
+
+var logger = logging.NewLogger(config.GetConfig())
 
 func InitServer() {
 	cfg := config.GetConfig()
@@ -18,10 +22,17 @@ func InitServer() {
 	// RegisterValidators()
 	val, ok := binding.Validator.Engine().(*validator.Validate)
 	if ok {
-		val.RegisterValidation("mobile", validation.IranianMobileNumberValidator, true)
+		err := val.RegisterValidation("mobile", validation.IranianMobileNumberValidator, true)
+		if err != nil {
+			logger.Error(logging.Validation, logging.Startup, err.Error(), nil)
+		}
+		err = val.RegisterValidation("password", validation.PasswordValidator, true)
+		if err != nil {
+			logger.Error(logging.Validation, logging.Startup, err.Error(), nil)
+		}
 	}
 
-	r.Use(gin.Logger(), gin.Recovery())
+	r.Use(gin.Logger(), gin.Recovery(), middlewares.LimitByRequest(), middlewares.AuthMiddleware())
 
 	api := r.Group("/api")
 
